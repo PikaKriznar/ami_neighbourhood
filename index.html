@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Energija v soseski</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1 class="page-title">Energija v soseski</h1>
+
+  <div class="top-right-stack">
+    <aside class="viz-legend" aria-label="Legenda">
+      <p class="viz-legend__title">Legenda</p>
+      <ul class="viz-legend__list">
+        <li><span class="viz-legend__dot viz-legend__dot--particle"></span> <strong>Deležci</strong> — točke tečejo po tokovih; več energije = gostejši tok.</li>
+        <li><span class="viz-legend__dot viz-legend__dot--sun"></span> <strong>Ura dneva</strong> — premakne sonce po nebu in spreminja dnevni faktor sončne elektrike.</li>
+        <li><span class="viz-legend__dot viz-legend__dot--eco"></span> <strong>€ in CO₂</strong> — ocena stroška in emisije za tok z omrežja (poenostavljen model).</li>
+      </ul>
+    </aside>
+
+    <aside class="energy-hud" id="energyHud" aria-live="polite">
+      <div class="energy-hud__row" id="hudPv">—</div>
+      <div class="energy-hud__row" id="hudShare">—</div>
+      <div class="energy-hud__row" id="hudGrid">—</div>
+      <div class="energy-hud__row energy-hud__row--eco" id="hudEco">—</div>
+    </aside>
+  </div>
+
+  <div id="wrapScene" class="page-scene" aria-label="Soseska"></div>
+
+  <div class="controls-dock">
+    <div class="dock-col">
+      <label class="dock-item">
+        <span class="dock-label">Sonce (oblačnost)</span>
+        <input type="range" id="sunSlider" min="0" max="100" value="70" aria-label="Sonce" />
+        <span class="dock-val" id="sunValue">70%</span>
+      </label>
+      <label class="dock-item dock-item--tight">
+        <span class="dock-label">Ura dneva</span>
+        <input type="range" id="hourSlider" min="6" max="20" step="0.25" value="12" aria-label="Ura dneva" />
+        <span class="dock-val" id="hourValue">12 h</span>
+      </label>
+      <p class="dock-hint">Oblačnost vpliva na „vreme“; ura premika sonce in dnevno moč PV.</p>
+    </div>
+    <div class="dock-col">
+      <label class="dock-item">
+        <span class="dock-label" id="labelH1">Hiša 1</span>
+        <input type="range" id="load1Slider" min="40" max="160" value="100" aria-label="Poraba hiša 1" />
+        <span class="dock-val" id="load1Value">100%</span>
+      </label>
+      <p class="dock-hint">Poraba v hiši: levo manj, desno več — hiša sveti močneje, ko je poraba višja.</p>
+    </div>
+    <div class="dock-col">
+      <label class="dock-item">
+        <span class="dock-label" id="labelH2">Hiša 2</span>
+        <input type="range" id="load2Slider" min="40" max="160" value="100" aria-label="Poraba hiša 2" />
+        <span class="dock-val" id="load2Value">100%</span>
+      </label>
+      <p class="dock-hint">Enako kot pri hiši 1: drsnik poveča ali zmanjša porabo in žar okoli hiše.</p>
+    </div>
+  </div>
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script defer src="app.js"></script>
+</body>
+</html>
