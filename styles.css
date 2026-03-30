@@ -217,3 +217,73 @@ body {
   font-variant-numeric: tabular-nums;
   color: rgba(255, 255, 255, 0.65);
 }
+
+/* Slider modal overlay */
+.slider-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  /* Transparent backdrop (modal card still provides readability) */
+  background: transparent;
+  backdrop-filter: blur(6px);
+}
+
+.slider-modal-overlay.is-open {
+  display: flex;
+}
+
+.slider-modal {
+  position: relative;
+  max-width: min(92vw, 34rem);
+  padding: 1.15rem 1.1rem 1rem;
+  border-radius: 14px;
+  /* Light modal: white card, readable against transparent backdrop */
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.slider-modal__title {
+  margin: 0 0 0.55rem;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: #000000;
+  display: none; /* modal should show only the question text */
+}
+
+.slider-modal__question {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.86);
+  display: block; /* ensure it's on its own line under the title */
+  font-weight: 700; /* bold question text */
+  margin-top: 0; /* no spacing because title is hidden */
+}
+
+.slider-modal__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.65rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.88);
+  cursor: pointer;
+}
+
+.slider-modal__close:hover {
+  border-color: rgba(0, 0, 0, 0.32);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.slider-modal__close:focus-visible {
+  outline: 3px solid rgba(142, 197, 168, 0.6);
+  outline-offset: 2px;
+}

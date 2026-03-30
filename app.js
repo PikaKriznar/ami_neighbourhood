@@ -405,15 +405,15 @@ function initNeighborhoodScene(container) {
     return curve;
   }
 
-  function makeParticleStrip(hex, n) {
+  function makeParticleStrip(hex, n, size = 0.15, baseOpacity = 0.75) {
     const geo = new THREE.BufferGeometry();
     const arr = new Float32Array(n * 3);
     geo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
     const mat = new THREE.PointsMaterial({
       color: hex,
-      size: 0.15,
+      size,
       transparent: true,
-      opacity: 0.75,
+      opacity: baseOpacity,
       depthTest: true,
       sizeAttenuation: true,
     });
@@ -426,7 +426,8 @@ function initNeighborhoodScene(container) {
   const partSun1 = makeParticleStrip(0x66ffaa, PT_N);
   const partSun2 = makeParticleStrip(0x66ffcc, PT_N);
   const partShare = makeParticleStrip(0x88ccff, PT_N);
-  const partGrid = makeParticleStrip(0xffccaa, PT_N);
+  // Uvoz/izvoz "heartbeat": increase size + density for better visibility.
+  const partGrid = makeParticleStrip(0xffccaa, PT_N + 22, 0.22, 0.9);
 
   const lineSun1 = makeFlowLine(0x55ee99);
   const lineSun2 = makeFlowLine(0x55ee99);
@@ -475,18 +476,19 @@ function initNeighborhoodScene(container) {
 
     const gi = sim.gridImport;
     const ge = sim.gridExport;
-    if (gi > 0.04) {
+    // Lower threshold so you can still see the heartbeat at moderate flows.
+    if (gi > 0.025) {
       flowDyn.grid.curve = setBezier3(lineGrid, pGridBottom, pMid, 1.15);
       lineGrid.visible = true;
       lineGrid.material.color.setHex(0xffaa99);
-      lineGrid.material.opacity = 0.28 + 0.48 * Math.min(1, gi / 4);
+      lineGrid.material.opacity = 0.36 + 0.6 * Math.min(1, gi / 4);
       flowDyn.grid.show = true;
       flowDyn.grid.str = Math.min(1, gi / 4);
-    } else if (ge > 0.04) {
+    } else if (ge > 0.025) {
       flowDyn.grid.curve = setBezier3(lineGrid, pMid, pGridBottom, 1.15);
       lineGrid.visible = true;
       lineGrid.material.color.setHex(0xffee99);
-      lineGrid.material.opacity = 0.28 + 0.48 * Math.min(1, ge / 4);
+      lineGrid.material.opacity = 0.36 + 0.6 * Math.min(1, ge / 4);
       flowDyn.grid.show = true;
       flowDyn.grid.str = Math.min(1, ge / 4);
     } else {
@@ -527,7 +529,7 @@ function initNeighborhoodScene(container) {
         part.arr[i * 3 + 2] = p.z;
       }
       part.pts.geometry.attributes.position.needsUpdate = true;
-      part.pts.material.opacity = 0.2 + 0.55 * d.str;
+      part.pts.material.opacity = key === "grid" ? 0.25 + 0.7 * d.str : 0.2 + 0.55 * d.str;
     }
     step("sun1", partSun1);
     step("sun2", partSun2);
@@ -650,15 +652,206 @@ function render() {
   updateEnergyHud(sim);
 }
 
+const modalOverlayEl = document.getElementById("sliderModalOverlay");
+const modalCloseEl = document.getElementById("sliderModalClose");
+const modalTitleEl = document.getElementById("sliderModalTitle");
+const modalQuestionEl = document.getElementById("sliderModalQuestion");
+
+let sliderModalOpen = false;
+let sliderModalTimer = null;
+let sliderModalPending = null;
+
+function sliderLabel(sliderId) {
+  switch (sliderId) {
+    case "sunSlider":
+      return "Sonce (oblačnost)";
+    case "hourSlider":
+      return "Ura dneva";
+    case "load1Slider":
+      return "Hiša 1 poraba";
+    case "load2Slider":
+      return "Hiša 2 poraba";
+    default:
+      return "Drsnik";
+  }
+}
+
+function sliderValueToDisplay(sliderId, v) {
+  switch (sliderId) {
+    case "sunSlider":
+    case "load1Slider":
+    case "load2Slider":
+      return `${Math.round(v)}%`;
+    case "hourSlider": {
+      const num = Number(v);
+      return `${num.toFixed(2).replace(/\.?0+$/, "")} h`;
+    }
+    default:
+      return String(v);
+  }
+}
+
+function bucketForSlider(sliderId, v) {
+  if (sliderId === "sunSlider") {
+    // 0–33 / 34–66 / 67–100
+    if (v < 34) return "low";
+    if (v < 67) return "mid";
+    return "high";
+  }
+  if (sliderId === "hourSlider") {
+    // 6–10 / 10–14 / 14–20
+    if (v < 10) return "low";
+    if (v <= 14) return "mid";
+    return "high";
+  }
+  if (sliderId === "load1Slider" || sliderId === "load2Slider") {
+    // 40–79 / 80–120 / 121–160
+    if (v < 80) return "low";
+    if (v <= 120) return "mid";
+    return "high";
+  }
+  return "mid";
+}
+
+function reflectiveQuestion(sliderId, direction, toValue) {
+  const bucket = bucketForSlider(sliderId, toValue);
+  const label = sliderLabel(sliderId);
+
+  const q = {
+    sunSlider: {
+      up: {
+        low: "Zelo oblačno je postalo bolj sončno. Ali si lahko predstavljaš, ali bo v soseski zdaj več 'viška' PV energije za deljenje, ali pa bo še vedno prevladoval uvoz iz omrežja?",
+        mid: "Zmerno povečanje sončne moči. Bo to dovolj, da se preklopi iz uvoza v deljenje/izvoz, ali bo razlika še vedno majhna?",
+        high: "Pri že zelo sončnih razmerah dodatno povečaš sončno moč. Ali pričakuješ, da bodo tokovi in deljenje rasli sorazmerno, ali pa naletiš na omejitev—poraba hiš namreč ostane enaka?",
+      },
+      down: {
+        low: "Ko sončno moč še znižaš (bolj oblačno), kaj se najprej spremeni v ravnotežju med hišami in omrežjem—več uvoza ali manj deljenja?",
+        mid: "Ko sončno moč v zmernem območju zmanjšaš, katera hiša bo najprej začutila pomanjkanje in zakaj?",
+        high: "Če pri zelo sončnem dnevu sončno moč zmanjšuješ, ali obstaja 'preklopna točka', ko se soseska začne zanašati bolj na omrežje kot na izvoz?",
+      },
+    },
+    hourSlider: {
+      up: {
+        low: "Premakneš uro proti kasnejšemu dopoldnevu. Ali lahko predvidiš, ali bo PV proizvodnja kmalu dovolj, da zmanjša uvoz, in katera hiša bi takrat dobila večvišek?",
+        mid: "Ko se približuješ poznejšemu poldnevu, ali bo še vedno v 'vrhu' proizvodnje ali bo že začelo zaostajati za porabo?",
+        high: "Ko greš bolj proti večeru, PV pada. Ali bi pričakoval, da se deljenje zmanjša in poveča uvoz, tudi če poraba hiš ostane enaka?",
+      },
+      down: {
+        low: "Če se vrneš proti zgodnjemu jutru, kako hitro pade dnevni faktor PV in kaj to naredi s tokovi energije?",
+        mid: "Zamakneš uro nazaj znotraj vrha. Ali se deljenje med hišama sploh opazi, ali pa se spremeni predvsem omrežna izmenjava?",
+        high: "Če se premakneš nazaj proti močnejšemu popoldnevu, ali se pojavi več viška za deljenje, ali pa še vedno ostanete večinoma odvisni od omrežja?",
+      },
+    },
+    load1Slider: {
+      up: {
+        low: "Povečaš porabo Hiše 1. Ali se ob tem bolj krepi uvoz iz omrežja ali pa se zmanjša izvoz/deljenje med hišama?",
+        mid: "Ko porabo povečaš iz zmerne proti višji, ali obstaja trenutek, ko Hiša 1 preide iz deljenja v pomanjkanje?",
+        high: "Pri zelo visoki porabi Hiše 1. Ali dodatno povečanje spremeni sistem precej, ali pa si že v stanju, kjer poraba skoraj vedno prevesi proizvodnjo?",
+      },
+      down: {
+        low: "Zmanjšaš porabo Hiše 1. Je takrat realno pričakovati, da bo ta hiša pogosteje 'donor' viška, in zakaj?",
+        mid: "Če porabo zmanjšaš nazaj proti zmerni, se bo omrežna izmenjava najprej umirila, ali pa se spremeni predvsem med-hišna izmenjava?",
+        high: "Ko pri zelo visoki porabi Hiše 1 porabo znižaš, ali lahko hitro preideš iz uvoznega stanja v izvoz/deljenje—kje bi bila ta meja?",
+      },
+    },
+    load2Slider: {
+      up: {
+        low: "Povečaš porabo Hiše 2. Ali se ob tem bolj krepi uvoz iz omrežja ali pa se zmanjša izvoz/deljenje med hišama?",
+        mid: "Ko porabo povečaš iz zmerne proti višji, ali obstaja trenutek, ko Hiša 2 preide iz deljenja v pomanjkanje?",
+        high: "Pri zelo visoki porabi Hiše 2. Ali dodatno povečanje spremeni sistem precej, ali pa si že v stanju, kjer poraba skoraj vedno prevesi proizvodnjo?",
+      },
+      down: {
+        low: "Zmanjšaš porabo Hiše 2. Je takrat realno pričakovati, da bo ta hiša pogosteje 'donor' viška, in zakaj?",
+        mid: "Če porabo zmanjšaš nazaj proti zmerni, se bo omrežna izmenjava najprej umirila, ali pa se spremeni predvsem med-hišna izmenjava?",
+        high: "Ko pri zelo visoki porabi Hiše 2 porabo znižaš, ali lahko hitro preideš iz uvoznega stanja v izvoz/deljenje—kje bi bila ta meja?",
+      },
+    },
+  };
+
+  const bySlider = q[sliderId];
+  if (!bySlider || !bySlider[direction]) return `Kako si opazil(a) spremembo pri ${label}?`;
+  return bySlider[direction][bucket] || `Kako si opazil(a) spremembo pri ${label}?`;
+}
+
+function directionToSlv(direction) {
+  if (direction === "up") return "povečal si";
+  return "zmanjšal si";
+}
+
+function openSliderModal({ sliderId, direction, fromValue, toValue }) {
+  if (!modalOverlayEl || !modalTitleEl || !modalQuestionEl) return;
+  sliderModalOpen = true;
+  modalOverlayEl.classList.add("is-open");
+  modalOverlayEl.setAttribute("aria-hidden", "false");
+
+  const label = sliderLabel(sliderId);
+  const deltaText = `${sliderValueToDisplay(sliderId, fromValue)} → ${sliderValueToDisplay(sliderId, toValue)}`;
+
+  modalTitleEl.textContent = `${label}: ${directionToSlv(direction)} (${deltaText})`;
+  modalQuestionEl.textContent = reflectiveQuestion(sliderId, direction, toValue);
+
+  if (modalCloseEl) modalCloseEl.focus();
+}
+
+function closeSliderModal() {
+  if (!modalOverlayEl) return;
+  sliderModalOpen = false;
+  modalOverlayEl.classList.remove("is-open");
+  modalOverlayEl.setAttribute("aria-hidden", "true");
+}
+
+function requestSliderModal(payload) {
+  if (!payload) return;
+  if (sliderModalOpen) return; // ne prekrivamo modalov med drsanjem
+  sliderModalPending = payload;
+  if (sliderModalTimer) window.clearTimeout(sliderModalTimer);
+  sliderModalTimer = window.setTimeout(() => {
+    openSliderModal(sliderModalPending);
+    sliderModalPending = null;
+  }, 220);
+}
+
+if (modalCloseEl) {
+  modalCloseEl.addEventListener("click", () => closeSliderModal());
+}
+if (modalOverlayEl) {
+  modalOverlayEl.addEventListener("click", (e) => {
+    if (e.target === modalOverlayEl) closeSliderModal();
+  });
+}
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSliderModal();
+});
+
 els.sunSlider.addEventListener("input", () => {
-  state.sunPct = Number(els.sunSlider.value);
+  const fromValue = state.sunPct;
+  const toValue = Number(els.sunSlider.value);
+  if (toValue !== fromValue) {
+    requestSliderModal({
+      sliderId: "sunSlider",
+      direction: toValue > fromValue ? "up" : "down",
+      fromValue,
+      toValue,
+    });
+  }
+  state.sunPct = toValue;
   els.sunValue.textContent = `${state.sunPct}%`;
   render();
 });
 
 if (els.hourSlider && els.hourValue) {
   els.hourSlider.addEventListener("input", () => {
-    state.hour = Number(els.hourSlider.value);
+    const fromValue = state.hour ?? 12;
+    const toValue = Number(els.hourSlider.value);
+    if (toValue !== fromValue) {
+      requestSliderModal({
+        sliderId: "hourSlider",
+        direction: toValue > fromValue ? "up" : "down",
+        fromValue,
+        toValue,
+      });
+    }
+    state.hour = toValue;
     els.hourValue.textContent = `${state.hour.toFixed(2).replace(/\.?0+$/, "")} h`;
     render();
   });
@@ -666,7 +859,18 @@ if (els.hourSlider && els.hourValue) {
 
 function bindLoad(slider, valueEl, id) {
   slider.addEventListener("input", () => {
-    state.loadMul[id] = Number(slider.value) / 100;
+    const fromPct = (state.loadMul[id] ?? 1) * 100;
+    const toPct = Number(slider.value);
+    if (toPct !== fromPct) {
+      requestSliderModal({
+        sliderId: slider.id,
+        direction: toPct > fromPct ? "up" : "down",
+        fromValue: fromPct,
+        toValue: toPct,
+      });
+    }
+
+    state.loadMul[id] = toPct / 100;
     valueEl.textContent = `${slider.value}%`;
     render();
   });
