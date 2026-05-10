@@ -1,0 +1,27 @@
+{
+  "draft": {
+    "sessionDate": "",
+    "testerInitials": "",
+    "deviceBrowser": "",
+    "branchVersion": "",
+    "participantId": "",
+    "participantDate": "",
+    "q1": "student",
+    "q2": "no",
+    "q3": "Energy consumption between two houses",
+    "q4": "4",
+    "q5": "3",
+    "q6": "Why are popups needed or not disabled by default",
+    "q7": "3",
+    "q8": "about_right",
+    "q9": "Finding about omrezje uvoz",
+    "q10": "3",
+    "q11": "Disabling popups",
+    "q12": "That they are only sliders",
+    "observerQuotes": "",
+    "observerBugs": "English text with slovenain website",
+    "observerTime": "02:00"
+  },
+  "participants": [],
+  "synthesis": {}
+}
