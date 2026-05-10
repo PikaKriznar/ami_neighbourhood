@@ -7,6 +7,47 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div id="modeOverlay" class="app-overlay is-open" aria-hidden="false">
+    <div class="app-overlay__card" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
+      <h2 id="modeTitle" class="app-overlay__title">Izberite način</h2>
+      <p class="app-overlay__text">Prosto raziskujte sosesko ali rešujte vodene energetske naloge.</p>
+      <div class="app-overlay__actions">
+        <button id="exploreBtn" class="app-btn app-btn--ghost" type="button">Raziskovanje</button>
+        <button id="tasksBtn" class="app-btn" type="button">Reši nalogo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="taskScenarioOverlay" class="app-overlay" aria-hidden="true">
+    <div class="app-overlay__card" role="dialog" aria-modal="true" aria-labelledby="taskScenarioTitle">
+      <h2 id="taskScenarioTitle" class="app-overlay__title">Scenarij naloge</h2>
+      <p id="taskScenarioText" class="app-overlay__text"></p>
+      <div class="app-overlay__actions">
+        <button id="taskBackToMenuBtn" class="app-btn app-btn--ghost" type="button">Glavni meni</button>
+        <button id="taskStartBtn" class="app-btn" type="button">Začni</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="taskGoalPanel" class="task-goal-panel" aria-live="polite">
+    <p class="task-goal-panel__label">Cilji naloge</p>
+    <p id="taskGoalTitle" class="task-goal-panel__title"></p>
+    <p id="taskGoalText" class="task-goal-panel__text"></p>
+  </div>
+
+  <canvas id="fireworksCanvas" class="fireworks-canvas" aria-hidden="true"></canvas>
+
+  <div id="taskCompleteOverlay" class="app-overlay" aria-hidden="true">
+    <div class="app-overlay__card" role="dialog" aria-modal="true" aria-labelledby="taskCompleteTitle">
+      <h2 id="taskCompleteTitle" class="app-overlay__title">Naloga je opravljena</h2>
+      <p id="taskCompleteText" class="app-overlay__text"></p>
+      <div class="app-overlay__actions">
+        <button id="taskTryAgainBtn" class="app-btn app-btn--ghost" type="button">Poskusi znova</button>
+        <button id="taskMainMenuBtn" class="app-btn" type="button">Glavni meni</button>
+      </div>
+    </div>
+  </div>
+
   <h1 class="page-title">Energija v soseski</h1>
 
   <div class="top-right-stack">

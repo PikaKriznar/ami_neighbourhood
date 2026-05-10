@@ -1,0 +1,133 @@
+% Kompilacija: pdflatex porocilo_ami_neighbourhood.tex (lahko tudi latexmk)
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[slovene]{babel}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+
+\title{\textbf{Energija v soseski}\\[0.25em]\large Interaktivna predstavitev lokalne energetske izmenjave}
+\author{Pika Križnar}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Kratka razlaga}
+\textbf{Za kaj je namenjen prototip?} Omogoča, da z nekaj minutami \emph{poizkušanja} vidite povezavo med oblačnostjo, uro dneva, porabo dveh hiš in tem, ali soseska električno energijo \emph{uveze} ali jo \emph{izveže}, ter koliko je na razpolago za \emph{medhišno deljenje}.
+Številke v kWh/\,h ponazorijo tokove tako, kot da moč štejemo čez virtualno \emph{eno uro}: didaktična okrajšava za simulacijo; ne zajema vseh omejitev realne naprave ali uradnih tarif.
+
+\textbf{Kako ga uporabim?} V brskalniku izberete \emph{Raziskovanje} in premikate štiri drsnike (oblačnost, ura dneva, porabi hiše 1 in 2) ter opazujete 3D sosesko, animirane tokove in števila v HUD. Če izberete \emph{Reši nalogo}, sistem poda konkreten cilj (npr.\ uravnotežiti uvoz in izvoz ob dani uri) ali omeji število drsnikov; ko je cilj dosežen, se prikaže kratek slovenski povzetek.
+
+\textbf{Zakaj ima smisel?} Če istočasno spreminjate več vhodov, je skupni učinek pogosto teže predvidevati---prototip zato nemudoma vrača vizualne in številske odzive (\emph{eco-feedback}); občasno še kratko modalno vprašanje povabi k razmišljanju o posledicah za omrežno izmenjavo in medhiško deljenje. Demonstracija je objavljena na \url{https://pikakriznar.github.io/ami_neighbourhood/}.
+
+\section*{Povzetek}
+Projekt \emph{Energija v soseski} je spletna interaktivna aplikacija za razumevanje deljenja in omrežne izmenjave elektrike med dvema hišama z navidezno proizvodnjo iz fotovoltike. Uporabnik z drsniki spreminja oblačnost, uro dneva in relativno porabo obeh hiš ter opazuje tokove energije v tridimenzionalnem prikazu. Aplikacija ponuja način proste raziskave in način z vodenimi nalogami z merljivimi cilji (uravnoteženje uvoza in izvoza, omejeno število drsnikov, večerni izvozni cilji).
+
+Glavni cilji pri razvoju so bili: (\emph{i})~intuitivna povezava med vzrokom in posledico (drsni vhodi in simulacija), (\emph{ii})~podpora učenju s smiselnimi nalogami in jasnim prikazom kWh/h, €/h in okoljskih ocen v stranskem \emph{HUD}, (\emph{iii})~zmožnost kratkih uporabniških študij z dokumentiranim povratnim informacijam.
+
+\section*{Razvoj in tehnološki sklop}
+Izdelavo smo zasnovali kot iterativni razvoj: najprej matematični in simbolični model (uravnotežje med presežki in primanjkljaji, proporcionalna alokacija deljenega toka med hišami, uvoz oz.\ izvoz v omrežje), nato vizualna plast in na koncu oblikovanje nalog ter uporabniške izkušnje. Delo je potekalo v kratkih spiralah: delujoč prototip → notranja predstavitev → prilagoditve besedil in interakcije → ponovno testiranje.
+
+Iz začetnih zapisov predmeta AmI (\texttt{2026 Projekt\_03}) izstopata predvsem dve razvojni usmeritvi: (\emph{i})~\emph{Vizualizator deljenja energije v soseski} z literaturo o skupnostni fleksibilnosti odjemalcev znotraj energetskih skupnosti (Kikanović~\cite{kikanovic2021}; navdih SolarVille~\cite{solarville}) ter (\emph{ii})~\emph{koncept prereza hiše z časovno odvisnimi stroški} pri načelu poigravanja za samozadostnost (Leskovšek~\cite{leskovsek2022}; sklici tudi na sorodne evropske raziskovalne vignete, npr.\ dinamične metafore prostora razpoložljive elektrike v Utrechtu). Ob branju kritike trajnostnih in refleksivnih vmesnikov smo zasukali zasnovni cilj iz iskanja ene najboljše rešitve proti prostemu eksperimentiranju, takojšnjemu povratnemu odzivu (\emph{eco-feedback}, Froehlich~\cite{froehlich2009}) in eksplicitnem poudarku odvisnosti med akterji (Ghajargar in sod.~\cite{ghajargar2018}); prav tako smo upoštevali teorijo skladnosti mentalnih modelov in reflektivnega prototipiranja iz literature o ergonomiji in razvoju HCI (Revell \& Stanton~\cite{revell2014}; Erichsen in sod.~\cite{erichsen2017}). Zaradi omejenega obsega in izrecnega cilja preglednosti mentalne podobe smo obsežen načrt (pet ali več hiš, BESS znotraj stanovanj, primerjava \emph{danes / prejšnji teden}, poseben agent z več stanji,\,\ldots) postopoma poenostavili: javni prototip v repozitoriju in na GitHub Pages (\url{https://pikakriznar.github.io/ami_neighbourhood/}) vsebuje \emph{dve} stanovanjski enoti z animiranim tokom moči med hišami in omrežjem, tri-dimenzionalno sonce glede na uro ter oblačnost, paralelni prikaz kWh/h skupaj z €/h ter CO$_2$/h kot večindikatorski \emph{eco-feedback}, načina \emph{Raziskovanje} in \emph{Naloge z tremi različnimi scenariji} z omejevanjem števila aktivnih drsnikov in merljivimi cilji --- reflektivne modalne pobude smo po internih opombah redčili ---, medtem ko ostajajo za nadgradnje še zamisli o ambientnem prikazu, pogovornem sopotniku, razčlenjenem prikazu porabe po posameznih napravah znotraj hiše ter podrobnejši ekonomski scenariji v odvisnosti od ure dneva.
+
+Za prikaz soseske, sonca in energetskih tokov smo uporabili knjižnico Three.js (\texttt{r128}) z CDN; celotna logika stanja, animacij tokov, nalog in vmesnika je v čistem JavaScriptu brez ogrodja (\emph{vanilla}), kar omogoča oddajo kot statično spletno vsebino brez strežniške zahteve (\texttt{index.html}, \texttt{app.js}, \texttt{styles.css}). Uporabniška besedila, spremljevalne številske vrstice in prehodi med menijem, raziskovanjem in aktivno nalogo smo oblikovali skladno z enotno barvno shemo in berljivimi tipografskimi nivoji.
+
+Ob robu aplikacije stoji ločena minimalistična anketa v mapi \texttt{survey/} za strukturirano zbiranje odziva pri testiranju (vprašanja o jasnosti načinov, drsnikih, nalogah in splošnem vtisu); vnosi se po sejah zapisujejo na seznam v brskalniku in jih je mogoče izvoziti v JSON za skupno sintezo --- orodje je bilo namenjeno predvsem dokumentiranju internih sej z realnimi zapiski.
+
+\section*{Testiranje z interno skupino in izvedeni popravki}
+\subsection*{Potek in način testiranja}
+Interno skupino (sošolci/soštudenti oz.\ člani projektne skupine za predmet) smo povabili k kratkim sejam v duhu \emph{thinking aloud}: izbira načina (\emph{Raziskovanje} oz.\ naloge), približno dve minuti prostega raziskovanja, nato \textbf{ena naloga od začetka do zaključka z vidnim signalom uspeha} (npr.\ animiran končni povratnik ob izpolnjenem pogoju).
+
+Pomembna načela seje so bila zavestno \textbf{minimalna intervencija moderatorja}: udeležencem nismo predstavljali podrobne didaktične razlage modela niti navodil korak za korakom o tem, kako povezati gibanje drsnikov s številkami na stranskem HUD. Ob začetku smo podali le kratko usmeritev (npr.\ ``mislite naglas; poskusite nalogo rešiti kar sami'') in po potrebi zelo ozko tehnično pojasnilo ob zastoju (npr.\ kje je prikazan besedilni cilj naloge). S tem smo preverjali, ali udeleženec \textbf{pretežno sam}, skozi poskušanje in opazovanje takojšnjega odziva vmesnika, poveže merilo uspeha z dejanji in \textbf{postopoma spozna smisel rešitve}, ne da bi mu bila strategija vnaprej podana kot dolgo ustno predavanje ali kot pretirano vodena pomoč.
+
+Strukturirane subjektivne ocene in komentarje smo po posamezni seji zbirali tudi v elektronski anketi (izvoz \texttt{.json}), da so bili vtisi dokumentirani in primerljivi.
+
+% Za prikaz slik: shranite datoteki v mapo figures/ (npr. PNG ali JPG) in po potrebi spremenite imena v \includegraphics spodaj.
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/IMG_3467.png}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/IMG_3471.png}
+  \end{minipage}
+  \caption{Interno uporabniško testiranje: prizor s seje (udeleženec pri aplikaciji in miselnem glasu).}
+  \label{fig:testiranje}
+\end{figure}
+
+\subsection*{Pohvale in pozitivni odzivi}
+Kljub zavestno nizki stopnji vodenja so se v anketah in prostih opombah večkrat pojavile \textbf{pohvale}: \textbf{vizualni prikaz in ilustrativnost} soseske, \textbf{prostota interakcije} z drsniki kot neposrednimi vzvodi, \textbf{privlačna animacija} in konsistentni oblikovalski jezik, \textbf{občutek enostavnega začetka} (jasna vloga štirih drsnikov), občutek, da je struktura dostopna tudi brez predhodnega dolgega navodila.
+Nekateri ocenijo \textbf{prilagojeno težavnost nalog} kot ``primerno'', kar ob opisani metodi testiranja pomeni, da je struktura \emph{nalog $\rightarrow$ merljivi cilji $\rightarrow$ povratnik} funkcionalna tudi brez dodatnih tutorialov. Mentor ali zunanji opazovalec je lahko v polju opombe zabeležil še splošen pozitiven vtis o privlačnosti koncepta učenja o energetski skupnosti prek takojšnjega poskusa in napake.
+
+\subsection*{Kritične opombe in izvedeni popravki}
+Relevantni vidiki kritike smo strnili v:\ (\emph{i})~\textbf{preveliko število modalnih oken} z reflektivnimi vprašanji ob ponavljajočem pomiku drsnikov --- prekinjajo pretok pozornosti in učenje po poskusih napake, (\emph{ii})~\textbf{mešanje jezikov} (angleski meniji in besedila nalog ob slovenskem kontekstu predmeta), zaradi česar je težje hitro začeti z nalogo in je vtis profesionalnosti slabi, (\emph{iii})~občasna \textbf{nejasnost besednih formulacij} okoli pojmov uvoz/izvoz in cilja naloge (kot posledica zgostitve vsebine v kratke stavke).
+
+\textbf{V odgovor smo na produktu implementirali dva popravka:}
+
+\begin{enumerate}\itemsep=2pt
+  \item \textbf{Manj pogostih modalnih vprašanj:} namesto pojavljanja ob vsaki spremembi vrednosti drsnika sistem zdaj dovoljuje \emph{kvečjemu eno reflektivno vprašanje na štiri osnovne drsnike na obisk strani}; debounce zamik smo nekoliko podaljšali, da en sam vlečen potez ne ustvari več zaporednih pojavnih oken. Uporabnik dobi še vedno pobudo k refleksiji, brez da bi bil večkrat prerezan med interakcijo.
+  \item \textbf{Enotna slovenščina na strani:} prevedeni in poenovljeni so bili nadlogni meniji (\emph{Raziskovanje}/\emph{Reši nalogo}), scenariji in cilji nalog, povzetki ob zaključku ter celoten vmesnik sopotne ankete (\texttt{survey/}), tako da je jezikovna izkušnja skladna in primerna za uporabo v slovenskem izobraževalnem okolju.
+\end{enumerate}
+
+\section*{Zaključek}
+Aplikacija združuje poenostavljen model energije sosedstva z intuitivnim 3D prikazom in nalogami za utrditev pojmov (uvoz, izvoz, medhišno deljenje, ekonomska in CO$_2$ ocena omrežja). Interno testiranje z \textbf{nizkim volumnom usmerjanja} je pokazalo, da udeleženci naloge lahko rešujejo in spoznavajo mehaniko \textbf{pretežno z opazovanjem vmesnika in miselnim glasom}, ne z dolgo uvodno razlago ali pretirano vodeno pomočjo; hkrati so anketni odzivi potrdili privlačnost vizualne plasti in preprostosti drsnikov. Dva konkretna popravka --- omejena frekvenca modalov in slovensko poenotenje --- utrjujeta sklenjen cikel \emph{povratna informacija $\rightarrow$ prilagoditev produkta}.
+
+Možne nadgradnje: lestvica na grafu moči, dostopnejši kontrast/prilagoditve za slabovidne, dopolnjene situacije ali več kot dve stanovanjski enoti v scenariju.
+
+\section*{Literatura in viri iz razvojne dokumentacije}
+Spodaj so navedeni viri, ki so neposredno podprli razvojni kontekst in teorijo v poročilu; magistrski deli iz repozitorija Univerze v Ljubljani vključujeta trajni identifikator \texttt{hdl.handle.net}. Za članek Ghajargar in sod.\ je navedena odprta dostopnost pri reviji \textit{International Journal of Design}.
+
+\begin{thebibliography}{99}
+
+\bibitem{kikanovic2021}
+E. Kikanović,
+\textit{Consumers' flexibility modelling within the energy community framework},
+magistrsko delo, Univerza v Ljubljani, Fakulteta za elektrotehniko, Ljubljana, 2021.
+\newblock XXIV, 76 str., UDK 621.31(043.3).
+\newblock Repozitorij UL: \url{https://repozitorij.uni-lj.si/IzpisGradiva.php?id=125641&lang=slv}.
+\newblock Trajni povezovalnik: \url{http://hdl.handle.net/20.500.12556/RUL-125641}.
+
+\bibitem{leskovsek2022}
+M. Leskovšek,
+\textit{Vpeljava poigritve v predstavitev samozadostne energetske skupnosti},
+magistrsko delo, Univerza v Ljubljani, Fakulteta za računalništvo in informatiko, Ljubljana, 2022.
+\newblock Repozitorij UL: \url{https://repozitorij.uni-lj.si/IzpisGradiva.php?id=142731&lang=slv}.
+\newblock Trajni povezovalnik: \url{http://hdl.handle.net/20.500.12556/RUL-142731}.
+
+\bibitem{froehlich2009}
+J.~M. Froehlich,
+\textit{Promoting Energy Efficient Behaviors in the Home through Feedback: Social Psychological Dimensions and Interactive Technologies},
+doktorska disertacija, University of Maryland, College Park, ZDA, 2009.
+
+\bibitem{ghajargar2018}
+M. Ghajargar, M. Wiberg in E. Stolterman,
+``Designing IoT Systems that Support Reflective Thinking: A Relational Approach,''
+\textit{International Journal of Design}, let.\ 12, št.\ 1, str.\ 21--35, 2018.
+\newblock ISSN 1994-036X (spletna izdaja).
+\newblock Odprti dostop: \url{https://ijdesign.org/index.php/IJDesign/article/view/2972}.
+\newblock V repozitoriju projekta je shranjena tudi kopija: \texttt{Ghajargar\_2018-IoT for Reflective thinking.pdf}.
+
+\bibitem{revell2014}
+K. M. Revell and N. A. Stanton,
+``Case studies in cognitive ergonomics: mental models,'' v
+\textit{Handbook of Human Factors and Ergonomics Methods}, 2.\ izd., Wiley, Hoboken, NJ, ZDA, 2004\,ff.; poglavje o mentalnih modelih kot podlagi za skladnost uporabnikove presoje z obnašanjem sistema.
+
+\bibitem{erichsen2017}
+J.~F. Erichsen, H. Sjöman, M. Steinert in T. Welo,
+``Protobooth: gathering and analyzing data on prototyping in early-stage engineering design projects by digitally capturing physical prototypes,''
+\textit{AI EDAM}, let.\ 35, št.\ 1, str.\ 65--80, 2021 (objava na spletu 2020).
+\newblock DOI: \href{https://doi.org/10.1017/S0890060420000414}{10.1017/S0890060420000414}.
+
+\end{thebibliography}
+
+\vspace{0.6em}
+\noindent\textit{Za PDF: namestite TeX distribucijo in v mapi projekta zaženite ukaz \texttt{pdflatex porocilo\_ami\_neighbourhood.tex}.}
+
+\end{document}

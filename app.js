@@ -619,10 +619,403 @@ const els = {
   load2Value: document.getElementById("load2Value"),
   labelH1: document.getElementById("labelH1"),
   labelH2: document.getElementById("labelH2"),
+  modeOverlay: document.getElementById("modeOverlay"),
+  exploreBtn: document.getElementById("exploreBtn"),
+  tasksBtn: document.getElementById("tasksBtn"),
+  taskScenarioOverlay: document.getElementById("taskScenarioOverlay"),
+  taskScenarioTitle: document.getElementById("taskScenarioTitle"),
+  taskScenarioText: document.getElementById("taskScenarioText"),
+  taskStartBtn: document.getElementById("taskStartBtn"),
+  taskBackToMenuBtn: document.getElementById("taskBackToMenuBtn"),
+  taskGoalPanel: document.getElementById("taskGoalPanel"),
+  taskGoalTitle: document.getElementById("taskGoalTitle"),
+  taskGoalText: document.getElementById("taskGoalText"),
+  fireworksCanvas: document.getElementById("fireworksCanvas"),
+  taskCompleteOverlay: document.getElementById("taskCompleteOverlay"),
+  taskCompleteText: document.getElementById("taskCompleteText"),
+  taskTryAgainBtn: document.getElementById("taskTryAgainBtn"),
+  taskMainMenuBtn: document.getElementById("taskMainMenuBtn"),
 };
 
 els.labelH1.textContent = LABELS.h1;
 els.labelH2.textContent = LABELS.h2;
+
+const sliderControls = {
+  sun: {
+    id: "sun",
+    slider: els.sunSlider,
+    valueEl: els.sunValue,
+    item: els.sunSlider.closest(".dock-item"),
+    stateKey: "sunPct",
+    min: Number(els.sunSlider.min),
+    max: Number(els.sunSlider.max),
+    format: (v) => `${Math.round(v)}%`,
+  },
+  hour: {
+    id: "hour",
+    slider: els.hourSlider,
+    valueEl: els.hourValue,
+    item: els.hourSlider.closest(".dock-item"),
+    stateKey: "hour",
+    min: Number(els.hourSlider.min),
+    max: Number(els.hourSlider.max),
+    format: (v) => `${Number(v).toFixed(2).replace(/\.?0+$/, "")} h`,
+  },
+  load1: {
+    id: "load1",
+    slider: els.load1Slider,
+    valueEl: els.load1Value,
+    item: els.load1Slider.closest(".dock-item"),
+    stateKey: "loadMulH1",
+    min: Number(els.load1Slider.min),
+    max: Number(els.load1Slider.max),
+    format: (v) => `${Math.round(v)}%`,
+  },
+  load2: {
+    id: "load2",
+    slider: els.load2Slider,
+    valueEl: els.load2Value,
+    item: els.load2Slider.closest(".dock-item"),
+    stateKey: "loadMulH2",
+    min: Number(els.load2Slider.min),
+    max: Number(els.load2Slider.max),
+    format: (v) => `${Math.round(v)}%`,
+  },
+};
+
+function rand(min, max, step = 1) {
+  const slots = Math.round((max - min) / step);
+  return min + Math.round(Math.random() * slots) * step;
+}
+
+function pickRandom(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function applyControlValue(controlId, value) {
+  const control = sliderControls[controlId];
+  if (!control) return;
+  control.slider.value = String(value);
+  control.valueEl.textContent = control.format(value);
+  if (controlId === "sun") state.sunPct = Number(value);
+  if (controlId === "hour") state.hour = Number(value);
+  if (controlId === "load1") state.loadMul.h1 = Number(value) / 100;
+  if (controlId === "load2") state.loadMul.h2 = Number(value) / 100;
+}
+
+function setControlEnabled(controlId, enabled) {
+  const control = sliderControls[controlId];
+  if (!control) return;
+  control.slider.disabled = !enabled;
+  if (control.item) control.item.classList.toggle("is-disabled", !enabled);
+}
+
+function setAllControlsEnabled(enabled) {
+  Object.keys(sliderControls).forEach((id) => setControlEnabled(id, enabled));
+}
+
+function setOverlayOpen(overlayEl, open) {
+  if (!overlayEl) return;
+  overlayEl.classList.toggle("is-open", open);
+  overlayEl.setAttribute("aria-hidden", open ? "false" : "true");
+}
+
+function showTaskGoals(title, text) {
+  if (!els.taskGoalPanel) return;
+  els.taskGoalTitle.textContent = title;
+  els.taskGoalText.textContent = text;
+  els.taskGoalPanel.classList.add("is-open");
+}
+
+function hideTaskGoals() {
+  if (!els.taskGoalPanel) return;
+  els.taskGoalPanel.classList.remove("is-open");
+}
+
+function eurFromSim(sim) {
+  return gridMoneyEurPerH(sim.gridImport, sim.gridExport);
+}
+
+function stateFromValues(values) {
+  return {
+    sunPct: values.sun,
+    hour: values.hour,
+    loadMul: { h1: values.load1 / 100, h2: values.load2 / 100 },
+  };
+}
+
+function pickTwoDisabledControls() {
+  const ids = ["sun", "hour", "load1", "load2"];
+  const firstIdx = Math.floor(Math.random() * ids.length);
+  let secondIdx = Math.floor(Math.random() * ids.length);
+  while (secondIdx === firstIdx) {
+    secondIdx = Math.floor(Math.random() * ids.length);
+  }
+  return [ids[firstIdx], ids[secondIdx]];
+}
+
+function createTaskTwo() {
+  const disabled = pickTwoDisabledControls();
+  const enabled = ["sun", "hour", "load1", "load2"].filter((id) => !disabled.includes(id));
+
+  const fixedValues = {
+    sun: rand(15, 95, 5),
+    hour: rand(6, 20, 0.25),
+    load1: rand(40, 160, 5),
+    load2: rand(40, 160, 5),
+  };
+  const startValues = { ...fixedValues };
+  const targetValues = { ...fixedValues };
+  enabled.forEach((id) => {
+    startValues[id] = rand(sliderControls[id].min, sliderControls[id].max, id === "hour" ? 0.25 : 5);
+    targetValues[id] = rand(sliderControls[id].min, sliderControls[id].max, id === "hour" ? 0.25 : 5);
+  });
+
+  let targetSim = simulate(stateFromValues(targetValues));
+  let targetEur = eurFromSim(targetSim);
+  let attempts = 0;
+
+  while ((targetSim.gridImport < 0.12 || targetEur < 0.02) && attempts < 12) {
+    enabled.forEach((id) => {
+      targetValues[id] = rand(sliderControls[id].min, sliderControls[id].max, id === "hour" ? 0.25 : 5);
+    });
+    targetSim = simulate(stateFromValues(targetValues));
+    targetEur = eurFromSim(targetSim);
+    attempts += 1;
+  }
+
+  const kwhMin = Math.max(0, targetSim.gridImport - 0.22);
+  const kwhMax = targetSim.gridImport + 0.22;
+  const eurMin = Math.max(-0.35, targetEur - 0.04);
+  const eurMax = targetEur + 0.04;
+
+  const disabledNames = disabled.map((id) => sliderLabel(sliderControls[id].slider.id));
+  const enabledNames = enabled.map((id) => sliderLabel(sliderControls[id].slider.id));
+
+  return {
+    id: "task-2",
+    title: "Ciljni uvoz (kWh/h) in strošek (€/h) z dvema drsnikoma",
+    scenarioText: `Lahko uporabljate samo dva drsnika. Dosežite ciljna območja za omrežni uvoz in strošek.\n\nOmogočeno: ${enabledNames.join(", ")}\nOnemogočeno: ${disabledNames.join(", ")}`,
+    goalText: `Dosežite omrežni uvoz ${kwhMin.toFixed(2)}–${kwhMax.toFixed(2)} kWh/h in strošek ${eurMin.toFixed(2)}–${eurMax.toFixed(2)} €/h.`,
+    completionText:
+      "Z omejenimi drsniki ste uskladili tako moč kot strošek. Kaže, da nekaj prilagoditev lahko vseeno oblikuje energetsko ekonomiko soseske.",
+    setup() {
+      applyControlValue("sun", startValues.sun);
+      applyControlValue("hour", startValues.hour);
+      applyControlValue("load1", startValues.load1);
+      applyControlValue("load2", startValues.load2);
+
+      ["sun", "hour", "load1", "load2"].forEach((id) => setControlEnabled(id, enabled.includes(id)));
+    },
+    isComplete(sim) {
+      const eur = eurFromSim(sim);
+      return (
+        sim.gridImport >= kwhMin &&
+        sim.gridImport <= kwhMax &&
+        eur >= eurMin &&
+        eur <= eurMax
+      );
+    },
+  };
+}
+
+const taskFactories = [
+  function createTaskOne() {
+    return {
+      id: "task-1",
+      title: "Optimalna energija ob poldnevu",
+      scenarioText:
+        "Nastavi parametre soseske tako, da je obratovanje ob poldnevu uravnoteženo in učinkovito. Drsnik ure je zaklenjen na poldne.",
+      goalText:
+        "Ob poldnevu (12 h) prilagodite drsnike tako, da je omrežna izmenjava skoraj uravnotežena: |uvoz − izvoz| ≤ 0,15 kWh/h.",
+      completionText:
+        "Uravnoteženje uvoza in izvoza ob poldnevu pomeni poravnano krajevo proizvodnjo in porabo. To zmanjša obremenitev omrežja in podpira učinkovito lokalno rabo energije.",
+      setup() {
+        applyControlValue("hour", 12);
+        applyControlValue("sun", 70);
+        applyControlValue("load1", 100);
+        applyControlValue("load2", 100);
+        setAllControlsEnabled(true);
+        setControlEnabled("hour", false);
+      },
+      isComplete(sim) {
+        return Math.abs(sim.gridImport - sim.gridExport) <= 0.15;
+      },
+    };
+  },
+  createTaskTwo,
+  function createTaskThree() {
+    return {
+      id: "task-3",
+      title: "Večerna odporna naloga",
+      scenarioText:
+        "Soseska je blizu sončnega zahoda. Obdrži nizek električni uvoz ob čim boljši obratovalnosti. Drsnik ure je zaklenjen na 18 h.",
+      goalText: "Ob 18 h poskrbite, da soseska oddaja v omrežje: vzdržujte izvoz ≥ 0,20 kWh/h.",
+      completionText:
+        "Ob sončnem zatonu ste dosegli neto izvoz. Sončna proizvodnja in prilagoditev porabe skupaj lahko sosesko preusmerita od odvisnosti od omrežja k dejavnemu prispevku tudi v poznejših urah.",
+      setup() {
+        applyControlValue("hour", 18);
+        applyControlValue("sun", 80);
+        applyControlValue("load1", 85);
+        applyControlValue("load2", 90);
+        setAllControlsEnabled(true);
+        setControlEnabled("hour", false);
+      },
+      isComplete(sim) {
+        return sim.gridExport >= 0.2;
+      },
+    };
+  },
+];
+
+const appState = {
+  mode: "menu",
+  task: null,
+  taskCompleted: false,
+  taskIdx: 0,
+  fireworksRunning: false,
+};
+
+function createNextTask() {
+  const factory = taskFactories[appState.taskIdx % taskFactories.length];
+  appState.taskIdx += 1;
+  return factory();
+}
+
+function openMainMenu() {
+  appState.mode = "menu";
+  appState.task = null;
+  appState.taskCompleted = false;
+  hideTaskGoals();
+  setAllControlsEnabled(true);
+  setOverlayOpen(els.taskScenarioOverlay, false);
+  setOverlayOpen(els.taskCompleteOverlay, false);
+  setOverlayOpen(els.modeOverlay, true);
+}
+
+function startExploreMode() {
+  appState.mode = "explore";
+  appState.task = null;
+  appState.taskCompleted = false;
+  hideTaskGoals();
+  setAllControlsEnabled(true);
+  setOverlayOpen(els.taskScenarioOverlay, false);
+  setOverlayOpen(els.taskCompleteOverlay, false);
+  setOverlayOpen(els.modeOverlay, false);
+  render();
+}
+
+function openTaskScenario() {
+  appState.mode = "task-brief";
+  appState.taskCompleted = false;
+  appState.task = createNextTask();
+  if (els.taskScenarioTitle) els.taskScenarioTitle.textContent = appState.task.title;
+  if (els.taskScenarioText) els.taskScenarioText.textContent = appState.task.scenarioText;
+  setOverlayOpen(els.modeOverlay, false);
+  setOverlayOpen(els.taskCompleteOverlay, false);
+  setOverlayOpen(els.taskScenarioOverlay, true);
+}
+
+function startTask() {
+  if (!appState.task) return;
+  appState.mode = "task-active";
+  appState.taskCompleted = false;
+  setOverlayOpen(els.taskScenarioOverlay, false);
+  setOverlayOpen(els.taskCompleteOverlay, false);
+  appState.task.setup();
+  showTaskGoals(appState.task.title, appState.task.goalText);
+  render();
+}
+
+function randomFireworkPalette() {
+  const palettes = [
+    ["#ffd166", "#ff7b7b", "#7dd3fc", "#86efac"],
+    ["#f9a8d4", "#c4b5fd", "#fde047", "#67e8f9"],
+    ["#fca5a5", "#fdba74", "#93c5fd", "#a7f3d0"],
+  ];
+  return pickRandom(palettes);
+}
+
+function playFireworksAnimation() {
+  const canvas = els.fireworksCanvas;
+  if (!canvas || appState.fireworksRunning) return;
+
+  appState.fireworksRunning = true;
+  canvas.classList.add("is-active");
+
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const particles = [];
+  const burstCount = 7;
+  const gravity = 0.065;
+
+  for (let b = 0; b < burstCount; b++) {
+    const cx = rand(w * 0.15, w * 0.85, 1);
+    const cy = rand(h * 0.14, h * 0.56, 1);
+    const colors = randomFireworkPalette();
+    const points = rand(42, 66, 1);
+    for (let i = 0; i < points; i++) {
+      const a = (i / points) * Math.PI * 2 + Math.random() * 0.22;
+      const speed = 1.8 + Math.random() * 2.7;
+      particles.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed - 0.6,
+        life: 80 + Math.random() * 30,
+        color: colors[i % colors.length],
+      });
+    }
+  }
+
+  let frame = 0;
+  function tick() {
+    frame += 1;
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach((p) => {
+      p.vy += gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 1;
+      const alpha = Math.max(0, p.life / 110);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    if (frame < 130) {
+      requestAnimationFrame(tick);
+      return;
+    }
+
+    canvas.classList.remove("is-active");
+    appState.fireworksRunning = false;
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function completeTask() {
+  if (!appState.task || appState.taskCompleted) return;
+  appState.taskCompleted = true;
+  appState.mode = "task-complete";
+  playFireworksAnimation();
+  if (els.taskCompleteText) {
+    els.taskCompleteText.textContent = appState.task.completionText;
+  }
+  setOverlayOpen(els.taskCompleteOverlay, true);
+}
 
 function updateEnergyHud(sim) {
   const elPv = document.getElementById("hudPv");
@@ -650,6 +1043,9 @@ function render() {
   const sim = simulate(state);
   if (neighborhood) neighborhood.update(state, sim);
   updateEnergyHud(sim);
+  if (appState.mode === "task-active" && appState.task && !appState.taskCompleted && appState.task.isComplete(sim)) {
+    completeTask();
+  }
 }
 
 const modalOverlayEl = document.getElementById("sliderModalOverlay");
@@ -660,6 +1056,9 @@ const modalQuestionEl = document.getElementById("sliderModalQuestion");
 let sliderModalOpen = false;
 let sliderModalTimer = null;
 let sliderModalPending = null;
+
+/** Vsakemu od štirih drsnikov največ eno premišljujoče vprašanje na obisk strani — manj motenja med vlečenjem. */
+const reflectiveModalAlreadyShownSliderIds = new Set();
 
 function sliderLabel(sliderId) {
   switch (sliderId) {
@@ -749,7 +1148,7 @@ function reflectiveQuestion(sliderId, direction, toValue) {
         high: "Pri zelo visoki porabi Hiše 1. Ali dodatno povečanje spremeni sistem precej, ali pa si že v stanju, kjer poraba skoraj vedno prevesi proizvodnjo?",
       },
       down: {
-        low: "Zmanjšaš porabo Hiše 1. Je takrat realno pričakovati, da bo ta hiša pogosteje 'donor' viška, in zakaj?",
+        low: "Zmanjšaš porabo Hiše 1. Je takrat smiselno pričakovati, da bo ta hiša pogosteje delila višek energije z drugo hišo, in zakaj?",
         mid: "Če porabo zmanjšaš nazaj proti zmerni, se bo omrežna izmenjava najprej umirila, ali pa se spremeni predvsem med-hišna izmenjava?",
         high: "Ko pri zelo visoki porabi Hiše 1 porabo znižaš, ali lahko hitro preideš iz uvoznega stanja v izvoz/deljenje—kje bi bila ta meja?",
       },
@@ -761,7 +1160,7 @@ function reflectiveQuestion(sliderId, direction, toValue) {
         high: "Pri zelo visoki porabi Hiše 2. Ali dodatno povečanje spremeni sistem precej, ali pa si že v stanju, kjer poraba skoraj vedno prevesi proizvodnjo?",
       },
       down: {
-        low: "Zmanjšaš porabo Hiše 2. Je takrat realno pričakovati, da bo ta hiša pogosteje 'donor' viška, in zakaj?",
+        low: "Zmanjšaš porabo Hiše 2. Je takrat smiselno pričakovati, da bo ta hiša pogosteje delila višek energije z drugo hišo, in zakaj?",
         mid: "Če porabo zmanjšaš nazaj proti zmerni, se bo omrežna izmenjava najprej umirila, ali pa se spremeni predvsem med-hišna izmenjava?",
         high: "Ko pri zelo visoki porabi Hiše 2 porabo znižaš, ali lahko hitro preideš iz uvoznega stanja v izvoz/deljenje—kje bi bila ta meja?",
       },
@@ -789,6 +1188,7 @@ function openSliderModal({ sliderId, direction, fromValue, toValue }) {
 
   modalTitleEl.textContent = `${label}: ${directionToSlv(direction)} (${deltaText})`;
   modalQuestionEl.textContent = reflectiveQuestion(sliderId, direction, toValue);
+  reflectiveModalAlreadyShownSliderIds.add(sliderId);
 
   if (modalCloseEl) modalCloseEl.focus();
 }
@@ -802,13 +1202,14 @@ function closeSliderModal() {
 
 function requestSliderModal(payload) {
   if (!payload) return;
+  if (reflectiveModalAlreadyShownSliderIds.has(payload.sliderId)) return;
   if (sliderModalOpen) return; // ne prekrivamo modalov med drsanjem
   sliderModalPending = payload;
   if (sliderModalTimer) window.clearTimeout(sliderModalTimer);
   sliderModalTimer = window.setTimeout(() => {
     openSliderModal(sliderModalPending);
     sliderModalPending = null;
-  }, 220);
+  }, 450);
 }
 
 if (modalCloseEl) {
@@ -822,6 +1223,28 @@ if (modalOverlayEl) {
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeSliderModal();
 });
+
+if (els.exploreBtn) {
+  els.exploreBtn.addEventListener("click", () => startExploreMode());
+}
+if (els.tasksBtn) {
+  els.tasksBtn.addEventListener("click", () => openTaskScenario());
+}
+if (els.taskBackToMenuBtn) {
+  els.taskBackToMenuBtn.addEventListener("click", () => openMainMenu());
+}
+if (els.taskStartBtn) {
+  els.taskStartBtn.addEventListener("click", () => startTask());
+}
+if (els.taskTryAgainBtn) {
+  els.taskTryAgainBtn.addEventListener("click", () => {
+    setOverlayOpen(els.taskCompleteOverlay, false);
+    startTask();
+  });
+}
+if (els.taskMainMenuBtn) {
+  els.taskMainMenuBtn.addEventListener("click", () => openMainMenu());
+}
 
 els.sunSlider.addEventListener("input", () => {
   const fromValue = state.sunPct;
@@ -896,3 +1319,4 @@ function sync() {
 sync();
 initNeighborhood();
 render();
+openMainMenu();

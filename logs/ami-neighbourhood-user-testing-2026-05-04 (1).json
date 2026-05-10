@@ -1,0 +1,27 @@
+{
+  "draft": {
+    "sessionDate": "",
+    "testerInitials": "",
+    "deviceBrowser": "",
+    "branchVersion": "",
+    "participantId": "",
+    "participantDate": "",
+    "q1": "student",
+    "q2": "no",
+    "q3": "Energy sharing consumption for 2 houses during different times of day",
+    "q4": "3",
+    "q5": "5",
+    "q6": "Scale for green bar",
+    "q7": "4",
+    "q8": "about_right",
+    "q9": "To find the optimal value",
+    "q10": "4",
+    "q11": "more green shades",
+    "q12": "the visual design",
+    "observerQuotes": "",
+    "observerBugs": "",
+    "observerTime": "02:00"
+  },
+  "participants": [],
+  "synthesis": {}
+}

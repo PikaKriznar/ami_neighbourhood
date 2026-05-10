@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Anketa uporabniškega testiranja — Energija v soseski</title>
+  <link rel="stylesheet" href="survey.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="top-bar">
+      <div class="brand">Anketa uporabniškega testiranja</div>
+      <nav class="nav-links">
+        <a href="../index.html">← Glavna aplikacija</a>
+        <span id="saveStatus" class="status" aria-live="polite"></span>
+      </nav>
+    </header>
+
+    <h1>Energija v soseski — povratne informacije</h1>
+    <p class="lead">
+      Kratka seja (~10 min): mislite naglas — izberite način, ~2 min raziskovanja, nato ena naloga od začetka do končnih efektov.
+      Po <strong>osvežitvi</strong> strani se izgubijo obrazec, dnevnik in sinteza. Med sejo uporabite <strong>Zabeleži udeleženca</strong>, nato
+      <strong>Izvozi vse (JSON)</strong> pred zaprtjem ali osvežitvijo, če rabite shranjevanje.
+    </p>
+
+    <form id="surveyForm" class="card" autocomplete="off">
+      <h2>Seja</h2>
+      <div class="field">
+        <label for="sessionDate">Datum</label>
+        <input type="date" id="sessionDate" name="sessionDate" />
+      </div>
+      <div class="field">
+        <label for="testerInitials">Začenice moderatorja</label>
+        <input type="text" id="testerInitials" name="testerInitials" placeholder="npr. PK" />
+      </div>
+      <div class="field">
+        <label for="deviceBrowser">Naprava / brskalnik</label>
+        <input type="text" id="deviceBrowser" name="deviceBrowser" placeholder="npr. Mac / Chrome" />
+      </div>
+      <div class="field">
+        <label for="branchVersion">Veja / različica</label>
+        <input type="text" id="branchVersion" name="branchVersion" placeholder="npr. feature/tasks" />
+      </div>
+
+      <h2>Udeleženec</h2>
+      <div class="field">
+        <label for="participantId">ID udeleženca (pseudonim)</label>
+        <input type="text" id="participantId" name="participantId" placeholder="npr. P04" />
+      </div>
+      <div class="field">
+        <label for="participantDate">Datum seje udeleženca (če je drugačen)</label>
+        <input type="date" id="participantDate" name="participantDate" />
+      </div>
+
+      <h2>A. Kontekst</h2>
+      <div class="field">
+        <label for="q1">1. Vloga</label>
+        <input type="text" id="q1" name="q1" placeholder="študent, učitelj, drugo …" />
+      </div>
+      <div class="field">
+        <span class="label-like">2. Ste aplikacijo že uporabljali?</span>
+        <div class="radio-row">
+          <label class="inline"><input type="radio" name="q2" value="yes" /> Da</label>
+          <label class="inline"><input type="radio" name="q2" value="no" /> Ne</label>
+        </div>
+      </div>
+
+      <h2>B. Prvi vtis</h2>
+      <div class="field">
+        <label for="q3">3. V eni povedi: kaj ta aplikacija predstavlja?</label>
+        <textarea id="q3" name="q3" class="tall"></textarea>
+      </div>
+      <div class="field">
+        <span class="label-like">4. Ali je bilo jasno, kaj storiti najprej? (1 = zelo nejasno, 5 = zelo jasno)</span>
+        <div class="scale" role="radiogroup" aria-label="Vprašanje 4">
+          <label class="inline"><input type="radio" name="q4" value="1" /> 1</label>
+          <label class="inline"><input type="radio" name="q4" value="2" /> 2</label>
+          <label class="inline"><input type="radio" name="q4" value="3" /> 3</label>
+          <label class="inline"><input type="radio" name="q4" value="4" /> 4</label>
+          <label class="inline"><input type="radio" name="q4" value="5" /> 5</label>
+        </div>
+      </div>
+
+      <h2>C. Način raziskovanja</h2>
+      <div class="field">
+        <span class="label-like">5. Ali so bili drsniki in njihovi učinki razumljivi? (1 = sploh ne, 5 = zelo)</span>
+        <div class="scale" role="radiogroup" aria-label="Vprašanje 5">
+          <label class="inline"><input type="radio" name="q5" value="1" /> 1</label>
+          <label class="inline"><input type="radio" name="q5" value="2" /> 2</label>
+          <label class="inline"><input type="radio" name="q5" value="3" /> 3</label>
+          <label class="inline"><input type="radio" name="q5" value="4" /> 4</label>
+          <label class="inline"><input type="radio" name="q5" value="5" /> 5</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="q6">6. Kaj vas je najbolj zmedlo (če je bilo kaj)?</label>
+        <textarea id="q6" name="q6"></textarea>
+      </div>
+
+      <h2>D. Način z nalogami</h2>
+      <div class="field">
+        <span class="label-like">7. Ali so bili cilji nalog lahko najdeni in berljivi? (1–5)</span>
+        <div class="scale" role="radiogroup" aria-label="Vprašanje 7">
+          <label class="inline"><input type="radio" name="q7" value="1" /> 1</label>
+          <label class="inline"><input type="radio" name="q7" value="2" /> 2</label>
+          <label class="inline"><input type="radio" name="q7" value="3" /> 3</label>
+          <label class="inline"><input type="radio" name="q7" value="4" /> 4</label>
+          <label class="inline"><input type="radio" name="q7" value="5" /> 5</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label-like">8. Težavnost nalog</span>
+        <div class="radio-row">
+          <label class="inline"><input type="radio" name="q8" value="too_easy" /> Prelahko</label>
+          <label class="inline"><input type="radio" name="q8" value="about_right" /> Primerno</label>
+          <label class="inline"><input type="radio" name="q8" value="too_hard" /> Pretesko</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="q9">9. Kaj je bilo najtežje?</label>
+        <textarea id="q9" name="q9"></textarea>
+      </div>
+
+      <h2>E. Skupaj</h2>
+      <div class="field">
+        <span class="label-like">10. Ali bi priporočili? (1 = verjetno ne, 5 = zelo verjetno)</span>
+        <div class="scale" role="radiogroup" aria-label="Vprašanje 10">
+          <label class="inline"><input type="radio" name="q10" value="1" /> 1</label>
+          <label class="inline"><input type="radio" name="q10" value="2" /> 2</label>
+          <label class="inline"><input type="radio" name="q10" value="3" /> 3</label>
+          <label class="inline"><input type="radio" name="q10" value="4" /> 4</label>
+          <label class="inline"><input type="radio" name="q10" value="5" /> 5</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="q11">11. Ena stvar za izboljšavo</label>
+        <textarea id="q11" name="q11"></textarea>
+      </div>
+      <div class="field">
+        <label for="q12">12. Ena stvar, ki vam je bila všeč</label>
+        <textarea id="q12" name="q12"></textarea>
+      </div>
+
+      <h2>F. Opazovalec</h2>
+      <div class="field">
+        <label for="observerQuotes">Pomembni citati / vedenje</label>
+        <textarea id="observerQuotes" name="observerQuotes"></textarea>
+      </div>
+      <div class="field">
+        <label for="observerBugs">Hrošči / pokvarjen vmesnik</label>
+        <textarea id="observerBugs" name="observerBugs"></textarea>
+      </div>
+      <div class="field">
+        <label for="observerTime">Čas do prvega smiselnega dejanja (mm:ss)</label>
+        <input type="text" id="observerTime" name="observerTime" placeholder="npr. 01:20" />
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btnLogParticipant">Zabeleži udeleženca in počisti obrazec</button>
+        <button type="button" class="btn btn--ghost" id="btnExport">Izvozi vse (JSON)</button>
+        <button type="button" class="btn btn--ghost" id="btnImport">Uvozi JSON</button>
+        <button type="button" class="btn btn--danger" id="btnClear">Počisti obrazec in dnevnik</button>
+      </div>
+      <input type="file" id="importFile" class="hidden-input" accept="application/json,.json" />
+      <p class="hint">Podatki obstajajo samo v tem zavihku do osvežitve. Izvozi JSON za shranjevanje; uvoz obnovi v tem zavihku.</p>
+    </form>
+
+    <section class="card">
+      <h2>Zabeleženi udeleženci</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Datum</th>
+              <th>V4</th>
+              <th>V5</th>
+              <th>V7</th>
+              <th>V8</th>
+              <th>V10</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="synthesisSection">
+      <h2>Po testiranju — sinteza (vključena v izvoz)</h2>
+      <div class="field">
+        <label for="synPain1">Glavna boleča točka 1</label>
+        <input type="text" id="synPain1" name="synPain1" />
+      </div>
+      <div class="field">
+        <label for="synPain2">Glavna boleča točka 2</label>
+        <input type="text" id="synPain2" name="synPain2" />
+      </div>
+      <div class="field">
+        <label for="synPain3">Glavna boleča točka 3</label>
+        <input type="text" id="synPain3" name="synPain3" />
+      </div>
+      <div class="field">
+        <label for="synLike1">Prednost / močna stran 1</label>
+        <input type="text" id="synLike1" name="synLike1" />
+      </div>
+      <div class="field">
+        <label for="synLike2">Prednost / močna stran 2</label>
+        <input type="text" id="synLike2" name="synLike2" />
+      </div>
+      <div class="field">
+        <label for="synLike3">Prednost / močna stran 3</label>
+        <input type="text" id="synLike3" name="synLike3" />
+      </div>
+      <div class="field">
+        <label for="synNext">Naslednja sprememba za preizkus v aplikaciji</label>
+        <textarea id="synNext" name="synNext"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <script src="survey.js" defer></script>
+</body>
+</html>

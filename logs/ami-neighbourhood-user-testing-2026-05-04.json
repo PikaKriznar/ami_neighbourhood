@@ -1,0 +1,27 @@
+{
+  "draft": {
+    "sessionDate": "",
+    "testerInitials": "",
+    "deviceBrowser": "",
+    "branchVersion": "",
+    "participantId": "",
+    "participantDate": "",
+    "q1": "student",
+    "q2": "no",
+    "q3": "It is about exploring how cosharing between houses is done, and what is optimal parameters to get the same import and export of energy",
+    "q4": "4",
+    "q5": "5",
+    "q6": "Maybe different phrasing (import, export, solar energy, house something something), so it is a bit unclear what the task is",
+    "q7": "4",
+    "q8": "about_right",
+    "q9": "Just understanding of import and export energy",
+    "q10": "4",
+    "q11": "Maybe bigger text of solar energy and house numbers",
+    "q12": "I liked the picture",
+    "observerQuotes": "I general I liked it",
+    "observerBugs": "I did not find any bugs",
+    "observerTime": "02:00"
+  },
+  "participants": [],
+  "synthesis": {}
+}
