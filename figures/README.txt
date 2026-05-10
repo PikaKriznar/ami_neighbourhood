@@ -1,8 +1,8 @@
-Za poročilo (porocilo_ami_neighbourhood.tex) dodajte dve sliki:
+Za poročilo (porocilo_ami_neighbourhood.tex) sta vključeni sliki:
 
-  figures/testiranje_1.png
-  figures/testiranje_2.png
+  figures/IMG_3467.png
+  figures/IMG_3471.png
 
-lahko tudi .jpg — potem v .tex zamenjajte končnico pri \includegraphics.
+Če zamenjate datoteke, posodobite poti v \includegraphics v .tex.
 
 Če pdflatex javi napako »file not found«, preverite natančna imena datotek in da sta datoteki v tej mapi glede na mapo, iz katere zaganjate pdflatex (običajno koren projekta).
